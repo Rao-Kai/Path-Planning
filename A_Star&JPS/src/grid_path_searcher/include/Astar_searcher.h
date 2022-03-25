@@ -40,6 +40,7 @@ class AstarPathFinder
 	public:
 		AstarPathFinder(){};
 		~AstarPathFinder(){};
+		
 		void AstarGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt);
 		void resetGrid(GridNodePtr ptr);
 		void resetUsedGrids();

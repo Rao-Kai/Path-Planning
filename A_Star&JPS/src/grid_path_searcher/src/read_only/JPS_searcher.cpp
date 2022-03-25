@@ -3,6 +3,8 @@
 using namespace std;
 using namespace Eigen;
 
+bool tie_break1 = false;
+
 inline void JPSPathFinder::JPSGetSucc(GridNodePtr currentPtr, vector<GridNodePtr> & neighborPtrSets, vector<double> & edgeCostSets)
 {
     neighborPtrSets.clear();
@@ -47,11 +49,17 @@ inline void JPSPathFinder::JPSGetSucc(GridNodePtr currentPtr, vector<GridNodePtr
         
         neighborPtrSets.push_back(nodePtr);
         edgeCostSets.push_back(
-            sqrt(
+            resolution*sqrt(
             (neighborIdx(0) - currentPtr->index(0)) * (neighborIdx(0) - currentPtr->index(0)) +
             (neighborIdx(1) - currentPtr->index(1)) * (neighborIdx(1) - currentPtr->index(1)) +
             (neighborIdx(2) - currentPtr->index(2)) * (neighborIdx(2) - currentPtr->index(2))   ) 
             );
+        // edgeCostSets.push_back(
+        // sqrt(
+        // (neighborIdx(0) - currentPtr->index(0)) * (neighborIdx(0) - currentPtr->index(0)) +
+        // (neighborIdx(1) - currentPtr->index(1)) * (neighborIdx(1) - currentPtr->index(1)) +
+        // (neighborIdx(2) - currentPtr->index(2)) * (neighborIdx(2) - currentPtr->index(2)))
+        // );
     }
 }
 
@@ -146,6 +154,50 @@ inline bool JPSPathFinder::isFree(const int & idx_x, const int & idx_y, const in
 {
     return (idx_x >= 0 && idx_x < GLX_SIZE && idx_y >= 0 && idx_y < GLY_SIZE && idx_z >= 0 && idx_z < GLZ_SIZE && 
            (data[idx_x * GLYZ_SIZE + idx_y * GLZ_SIZE + idx_z] < 1));
+}
+
+double getHeu(GridNodePtr node1, GridNodePtr node2)
+{
+    /* 
+    choose possible heuristic function you want
+    Manhattan, Euclidean, Diagonal, or 0 (Dijkstra)
+    Remember tie_breaker learned in lecture, add it here ?
+    *
+    *
+    *
+    STEP 1: finish the AstarPathFinder::getHeu , which is the heuristic function
+    please write your code below
+    *
+    *
+    */
+    double h;
+    auto node1_coord=node1->coord;
+    auto node2_coord=node2->coord;
+
+    //曼哈顿距离
+    // h=std::abs(node1_coord(0)-node2_coord(0))+std::abs(node1_coord(1)-node2_coord(1))
+    //   +std::abs(node1_coord(2)-node2_coord(2)); 
+    
+    //欧式距离
+    // h=std::sqrt(std::pow((node1_coord(0)-node2_coord(0)),2)+std::pow((node1_coord(1)-node2_coord(1)),2)
+    // +std::pow((node1_coord(2)-node2_coord(2)),2));
+
+    //对角距离
+    double dx=std::abs(node1_coord(0)-node2_coord(0));
+    double dy=std::abs(node1_coord(1)-node2_coord(1));
+    double dz=std::abs(node1_coord(2)-node2_coord(2));
+    double min_xyz=std::min({dx,dy,dz});
+    h=dx+dy+dz+(std::sqrt(3)-3)*min_xyz;
+
+    //tie_break
+    if(tie_break1)
+    {
+        double p=1.0/25.0;
+        h *= (1.0+p);
+        //std::cout << "Tie Break!" << std::endl;
+    }
+    //std::cout <<"h is: "<< h << std::endl;
+    return h;
 }
 
 void JPSPathFinder::JPSGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
