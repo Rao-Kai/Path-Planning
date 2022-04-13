@@ -68,78 +68,67 @@ void minimumJerkTrajGen(
 {
     Eigen::MatrixXd M = Eigen::MatrixXd::Zero(6 * pieceNum, 6 * pieceNum);
     Eigen::MatrixXd b = Eigen::MatrixXd::Zero(6 * pieceNum, 3);
-    Eigen::MatrixXd E_K = Eigen::MatrixXd::Zero(6 , 6);
-    Eigen::MatrixXd F_K = Eigen::MatrixXd::Zero(6 , 6);
+    
     Eigen::MatrixXd E_M = Eigen::MatrixXd::Zero(3 , 6);
     Eigen::MatrixXd F_0 = Eigen::MatrixXd::Zero(3 , 6);
-    std::cout << M << std::endl;
+    //std::cout << M << std::endl;
 
     int t = timeAllocationVector(pieceNum-1);
     std::cout << t << std::endl;
     F_0 << 1, 0, 0, 0, 0, 0,
           0, 1, 0, 0, 0, 0, 
           0, 0, 2, 0, 0, 0;
-    std::cout << F_0 << std::endl;
+    //std::cout << F_0 << std::endl;
+
     E_M << 1, t, pow(t,2), pow(t,3), pow(t,4), pow(t,5),
            0, 1, 2*t, 3*pow(t,2), 4*pow(t,3), 5*pow(t,4),
            0, 0, 2, 6*t, 12*pow(t,2), 20*pow(t,3);
-    std::cout << E_M << std::endl;
+    // std::cout << E_M << std::endl;
 
-    
-    std::cout << M << std::endl;
+    M.block(0, 0 , 3, 6) = F_0;
+    M.block(6 * pieceNum - 3, 6 * pieceNum - 6 , 3, 6) = E_M;
+    // std::cout << M << std::endl;
 
-    E_K << 1, t, pow(t,2), pow(t,2), pow(t,2), pow(t,2),
-               1, t, pow(t,2), pow(t,2), pow(t,2), pow(t,2),
+    b.row(0) = initialPos.transpose();
+    b.row(1) = initialVel.transpose();
+    b.row(2) = initialAcc.transpose();
+    b.row(6 * pieceNum - 3) = terminalPos.transpose();
+    b.row(6 * pieceNum - 2) = terminalVel.transpose();
+    b.row(6 * pieceNum - 1) = terminalAcc.transpose();
+    std::cout << b << std::endl;
+
+    for(int k = 1; k < pieceNum; k++){
+        Eigen::MatrixXd E_K = Eigen::MatrixXd::Zero(6 , 6);
+        Eigen::MatrixXd F_K = Eigen::MatrixXd::Zero(6 , 6);
+        int t = timeAllocationVector(k-1);
+        std::cout << t << std::endl;
+
+        E_K << 1, t, pow(t,2), pow(t,3), pow(t,4), pow(t,5),
+               1, t, pow(t,2), pow(t,3), pow(t,4), pow(t,5),
                0, 1, 2*t, 3*pow(t,2), 4*pow(t,3), 5*pow(t,4),
                0, 0, 2, 6*t, 12*pow(t,2), 20*pow(t,3),
                0, 0, 0, 6, 24*t, 60*pow(t,2),
                0, 0, 0, 0, 24, 120*t;
+        std::cout << E_K << std::endl;
+
         F_K << 0, 0, 0, 0, 0, 0,
-               0, 0, 0, 0, 0, 0,
-               0, -1, -2*t, -3*pow(t,2), -4*pow(t,3), -5*pow(t,4),
-               0, 0, -2, -6*t, -12*pow(t,2), -20*pow(t,3),
-               0, 0, 0, -6, -24*t, -60*pow(t,2),
-               0, 0, 0, 0, -24, -120*t;
+              -1, 0, 0, 0, 0, 0,
+               0, -1, 0, 0, 0, 0,
+               0, 0, -2, 0, 0, 0,
+               0, 0, 0, -6, 0, 0,
+               0, 0, 0, 0, -24, 0;
+        std::cout << F_K << std::endl;
 
+        M.block(3+(k-1)*6, (k-1)*6 , 6, 6) = E_K;
+        M.block(3+(k-1)*6, 6*k , 6, 6) = F_K;
 
-    M.block(0, 0 , 3, 6) = F_0;
-    M.block(3, 0 , 3, 6) = E_M;
-    b.block(0, 0, 1, 3) = initialPos.transpose();
-    b.block(3, 0, 1, 3) = terminalPos.transpose();
-    std::cout << M << std::endl;
-    std::cout << b << std::endl;
-
-    // for(int k = 1; k < pieceNum; k++){
-    //     int t = timeAllocationVector(k-1);
-    //     std::cout << t << std::endl;
-    //     E_K << 1, t, pow(t,2), pow(t,2), pow(t,2), pow(t,2),
-    //            1, t, pow(t,2), pow(t,2), pow(t,2), pow(t,2),
-    //            0, 1, 2*t, 3*pow(t,2), 4*pow(t,3), 5*pow(t,4),
-    //            0, 0, 2, 6*t, 12*pow(t,2), 20*pow(t,3),
-    //            0, 0, 0, 6, 24*t, 60*pow(t,2),
-    //            0, 0, 0, 0, 24, 120*t;
-    //     F_K << 0, 0, 0, 0, 0, 0,
-    //            0, 0, 0, 0, 0, 0,
-    //            0, -1, -2*t, -3*pow(t,2), -4*pow(t,3), -5*pow(t,4),
-    //            0, 0, -2, -6*t, -12*pow(t,2), -20*pow(t,3),
-    //            0, 0, 0, -6, -24*t, -60*pow(t,2),
-    //            0, 0, 0, 0, -24, -120*t;
-    //     M.block(3+(k-1)*6, 0 , 6, 6) = E_K;
-    //     M.block(3+(k-1)*6, 6*k , 6, 6) = F_K;
-    //     b.block(3+(k-1)*6, 0, 1, 3) = intermediatePositions.col(k-1).transpose();
-    // }
-    // int k = pieceNum;
-    // M.block(0, 0 , 3, 6) = F_0;
-    // M.block(3+6*k, 6*k , 3, 6) = E_M;
-    // b.block(0, 0, 1, 3) = initialPos.transpose();
-    // b.block(3+6*k, 0, 1, 3) = terminalPos.transpose();
-
+        b.row(3+(k-1)*6) = intermediatePositions.col(k-1).transpose();
+        std::cout << b << std::endl;
+    }
 
     coefficientMatrix = M.inverse() * b;
     std::cout << coefficientMatrix << std::endl;
-
-
-
+    
     // coefficientMatrix is a matrix with 6*piece num rows and 3 columes
     // As for a polynomial c0+c1*t+c2*t^2+c3*t^3+c4*t^4+c5*t^5,
     // each 6*3 sub-block of coefficientMatrix is
