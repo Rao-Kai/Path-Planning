@@ -45,7 +45,7 @@ Visualization Manager:
         Y: 0
         Z: 0
       Plane: XY
-      Plane Cell Count: 50
+      Plane Cell Count: 200
       Reference Frame: <Fixed Frame>
       Value: true
     - Class: rviz/Axes
@@ -65,7 +65,7 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz/PointCloud2
       Color: 193; 193; 193
-      Color Transformer: AxisColor
+      Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
